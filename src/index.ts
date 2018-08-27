@@ -3,18 +3,23 @@ import grpc from 'grpc';
 export * from 'grpc';
 
 interface PreHandler {
-    (call : any, callback : any) : void;
+    (call: any): void;
+}
+interface PostHandler {
+    (call: any): void;
 }
 
 export class Server extends grpc.Server {
     preHandler?: PreHandler;
+    postHandler?: PostHandler;
     services: Array<grpc.UntypedServiceImplementation> = [];
 
     /**
      * Constructs a server object that stores request handlers and delegates
      * incoming requests to those handlers
-     * @param options Options that should be passed to the internal server
-     *     implementation
+     * @param options Options that should be passed to the internal server implementation
+     * @param preHandler Optional method to be invoked prior to the actual service handler
+     * @param postHandler Optional method to be invoked after the actual service handler, and before returning the result
      * ```
      * var server = new grpc.Server();
      * server.addProtoService(protobuf_service_descriptor, service_implementation);
@@ -23,9 +28,10 @@ export class Server extends grpc.Server {
      * ```
      */
 
-    constructor(options?: object, preHandler?: PreHandler) {
+    constructor(options?: object, preHandler?: PreHandler, postHandler?: PostHandler) {
         super(options);
         if (preHandler) this.preHandler = preHandler;
+        if (postHandler) this.postHandler = postHandler;
     }
 
     /**
@@ -48,13 +54,22 @@ export class Server extends grpc.Server {
     };
 
     handler(call: any, callback: any, implementation: any) {
-        // TODO: implement, deal with returns/errors/etc.  All that stuff.
+        try {
+            if (this.preHandler) {
+                this.preHandler(call);
+            }
 
-        if (this.preHandler) {
-            this.preHandler(call, callback);
+            implementation(call, (err: any, ...args: [any]) => {
+                if (!err && this.postHandler) {
+                    this.postHandler(call);
+                }
+
+                callback(err, ...args);
+            });
         }
-
-        implementation(call, callback);
+        catch (err) {
+            callback(err, null);
+        }
 
     }
 }
