@@ -4,13 +4,13 @@ interface PreHandler {
     // (source: string, subString: string): boolean;
 }
 interface PostHandler {
-    
+
 }
 
 export class Server extends grpc.Server {
-    preHandler? : PreHandler;
-    postHandler? : PostHandler;
-    services : Array<grpc.UntypedServiceImplementation> = [];
+    preHandler?: PreHandler;
+    postHandler?: PostHandler;
+    services: Array<grpc.UntypedServiceImplementation> = [];
 
     /**
      * Constructs a server object that stores request handlers and delegates
@@ -25,11 +25,10 @@ export class Server extends grpc.Server {
      * ```
      */
 
-    constructor(options?: object, preHandler? : PreHandler, postHandler? : PostHandler)
-    {
+    constructor(options?: object, preHandler?: PreHandler, postHandler?: PostHandler) {
         super(options);
-        this.preHandler = preHandler;
-        this.postHandler = postHandler;
+        if (preHandler) this.preHandler = preHandler;
+        if (postHandler) this.postHandler = postHandler;
     }
 
     /**
@@ -41,31 +40,24 @@ export class Server extends grpc.Server {
     addService<ImplementationType = grpc.UntypedServiceImplementation>(
         service: grpc.ServiceDefinition<ImplementationType>,
         implementation: ImplementationType
-      ): void {
-        //   super.addService(service, implementation);
-        // Object.getOwnPropertyNames(implementation).forEach(
-        //     (val, idx, array) => {
-        //     //   console.log(val + ' -> ' + implementation[val]);
-        //         // this.services[val] = implementation[val];
-        // }
-        //   );
-
-        let proxies : any = {};
+    ): void {
+        let proxies: any = {};
         for (const key in implementation) {
-            proxies[key] = (call : any, callback : any) => {
+            proxies[key] = (call: any, callback: any) => {
                 this.handler(call, callback, implementation[key]);
             }
         }
+        super.addService(service, proxies);
     };
 
-    handler(call : any, callback : any, target : any) {
+    handler(call: any, callback: any, implementation: any) {
         // TODO: implement, deal with returns/errors/etc.  All that stuff.
 
         if (this.preHandler) {
             console.log('calling preHandler');
         }
 
-        target(call, callback);
+        implementation(call, callback);
 
         if (this.postHandler) {
             console.log('calling postHandler');
