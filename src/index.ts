@@ -1,12 +1,9 @@
 import grpc from 'grpc';
 
+export * from 'grpc';
+
 interface PreHandler {
     (call : any, callback : any) : void;
-}
-
-export class ServerCredentials extends grpc.ServerCredentials {}
-export function loadPackageDefinition(packageDefinition : grpc.PackageDefinition) : grpc.GrpcObject {
-    return grpc.loadPackageDefinition(packageDefinition);
 }
 
 export class Server extends grpc.Server {
