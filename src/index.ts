@@ -1,15 +1,16 @@
 import grpc from 'grpc';
 
 interface PreHandler {
-    // (source: string, subString: string): boolean;
+    (call : any, callback : any) : void;
 }
-interface PostHandler {
 
+export class ServerCredentials extends grpc.ServerCredentials {}
+export function loadPackageDefinition(packageDefinition : grpc.PackageDefinition) : grpc.GrpcObject {
+    return grpc.loadPackageDefinition(packageDefinition);
 }
 
 export class Server extends grpc.Server {
     preHandler?: PreHandler;
-    postHandler?: PostHandler;
     services: Array<grpc.UntypedServiceImplementation> = [];
 
     /**
@@ -25,10 +26,9 @@ export class Server extends grpc.Server {
      * ```
      */
 
-    constructor(options?: object, preHandler?: PreHandler, postHandler?: PostHandler) {
+    constructor(options?: object, preHandler?: PreHandler) {
         super(options);
         if (preHandler) this.preHandler = preHandler;
-        if (postHandler) this.postHandler = postHandler;
     }
 
     /**
@@ -54,13 +54,10 @@ export class Server extends grpc.Server {
         // TODO: implement, deal with returns/errors/etc.  All that stuff.
 
         if (this.preHandler) {
-            console.log('calling preHandler');
+            this.preHandler(call, callback);
         }
 
         implementation(call, callback);
 
-        if (this.postHandler) {
-            console.log('calling postHandler');
-        }
     }
 }
