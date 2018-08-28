@@ -55,6 +55,7 @@ export class Server extends grpc.Server {
 
     handler(call: any, callback: any, implementation: any) {
         let context = {};
+        let postHandlerCalled = false;
         try {
             if (this.preHandler) {
                 this.preHandler(context, call);
@@ -62,13 +63,14 @@ export class Server extends grpc.Server {
 
             implementation(call, (err: any, ...args: [any]) => {
                 if (this.postHandler) {
+                    postHandlerCalled = true;
                     this.postHandler(err, context, call);
                 }
                 callback(err, ...args);
             });
         }
         catch (err) {
-            if (this.postHandler) {
+            if (!postHandlerCalled && this.postHandler) {
                 this.postHandler(err, context, call);
             }
             callback(err, null);    
