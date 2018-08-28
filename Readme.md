@@ -62,5 +62,56 @@ If the `preHandler` throws an error, or the target function calls its `callback`
 
 `request` is the object provided by the underlying grpc framework (commonly referred to as `call` in the official documentation), updated with any changes caused by the `preHandler` and/or target function.
 
+## Example
+```javascript
+const PROTO_PATH = './protos/helloworld.proto';
+const grpc = require('grpc-middleware');
+
+var protoLoader = require('@grpc/proto-loader');
+
+var packageDefinition = protoLoader.loadSync(
+    PROTO_PATH,
+    {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true
+    });
+const hello_proto = grpc.loadPackageDefinition(packageDefinition).helloworld;
+
+function sayHello(call, callback) {
+    callback(null, { message: 'Hello ' + call.request.name });
+}
+
+function preHook(context, request) {
+
+    console.log('in prehook', request);
+    console.log(context); // should be {}
+    context.mytest = 'myvalue!!';
+    console.log('finished prehook');
+} 
+
+function postHook(err, context, request) {
+    console.log('in postHook');
+    console.log(context); // should be {mytest: "myvalue!!"}
+    console.log('finished posthook');
+} 
+
+const server = new grpc.Server(null, preHook, postHook);
+
+server.addService(hello_proto.Greeter.service, { sayHello: sayHello });
+
+var port = server.bind('0.0.0.0:50051', grpc.ServerCredentials.createInsecure());
+if (port != 0) {
+    console.log(`Bound to port ${port}`);
+    server.start();
+}
+else {
+    console.log(`Unable to bind to port.`);
+    
+}
+```
+
 ## License
 [MIT](LICENSE)
