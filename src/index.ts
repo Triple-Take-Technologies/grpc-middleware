@@ -1,3 +1,9 @@
+/*!
+ * grpc-middleware
+ * Copyright(c) 2018 Triple Take Technologies <jason@tripletaketechnologies.com>
+ * MIT Licensed
+ */
+
 import grpc from 'grpc';
 
 export * from 'grpc';
