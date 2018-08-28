@@ -3,10 +3,10 @@ import grpc from 'grpc';
 export * from 'grpc';
 
 interface PreHandler {
-    (call: any): void;
+    (context: Object, request: any): void;
 }
 interface PostHandler {
-    (call: any): void;
+    (context: Object, request: any): void;
 }
 
 export class Server extends grpc.Server {
@@ -54,14 +54,15 @@ export class Server extends grpc.Server {
     };
 
     handler(call: any, callback: any, implementation: any) {
+        let context = {};
         try {
             if (this.preHandler) {
-                this.preHandler(call);
+                this.preHandler(context, call);
             }
 
             implementation(call, (err: any, ...args: [any]) => {
                 if (!err && this.postHandler) {
-                    this.postHandler(call);
+                    this.postHandler(context, call);
                 }
 
                 callback(err, ...args);
