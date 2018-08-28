@@ -11,7 +11,7 @@ Designed as a drop-in replacement for [grpc](https://github.com/grpc/grpc-node).
 This is a [Node.js](https://nodejs.org/en/) module available through the
 [npm registry](https://www.npmjs.com/).
 
-Installation is done `npm`:
+Installation is done via `npm`:
 ```bash
 $ npm install grpc-middleware
 ```
