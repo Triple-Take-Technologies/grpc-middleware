@@ -6,7 +6,7 @@ interface PreHandler {
     (context: Object, request: any): void;
 }
 interface PostHandler {
-    (context: Object, request: any): void;
+    (err: Error | null, context: Object, request: any): void;
 }
 
 export class Server extends grpc.Server {
@@ -61,15 +61,17 @@ export class Server extends grpc.Server {
             }
 
             implementation(call, (err: any, ...args: [any]) => {
-                if (!err && this.postHandler) {
-                    this.postHandler(context, call);
+                if (this.postHandler) {
+                    this.postHandler(err, context, call);
                 }
-
                 callback(err, ...args);
             });
         }
         catch (err) {
-            callback(err, null);
+            if (this.postHandler) {
+                this.postHandler(err, context, call);
+            }
+            callback(err, null);    
         }
 
     }
