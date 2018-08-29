@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Enables you to optionally define a prehook function and/or a posthook function which will get processed by a grpc server for every grpc call.",
   "main": "dist/index.js",
-  "repository": "grpc-middleware",
+  "repository": "Triple-Take-Technologies/grpc-middleware",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
