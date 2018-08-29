@@ -9,7 +9,7 @@
   },
   "keywords": ["grpc", "middleware", "interceptors"],
   "author": "Jason Litowitz",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^10.9.2",
     "protobufjs": "^6.8.8"
