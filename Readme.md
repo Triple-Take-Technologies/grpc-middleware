@@ -113,5 +113,8 @@ else {
 }
 ```
 
+## Limitations
+This package has only been tested with Server/Unary calls.  It has not been tested with client streaming, server streaming, or bidirectional calls.
+
 ## License
 [MIT](LICENSE)
