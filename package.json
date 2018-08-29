@@ -1,13 +1,14 @@
 {
   "name": "grpc-middleware",
   "version": "1.0.0",
-  "description": "",
+  "description": "Enables you to optionally define a prehook function and/or a posthook function which will get processed by a grpc server for every grpc call.",
   "main": "dist/index.js",
+  "repository": "grpc-middleware",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["grpc", "middleware", "interceptors"],
+  "author": "Jason Litowitz",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^10.9.2",
