@@ -1,8 +1,8 @@
 # grpc-middleware
 
-Not really a middleware provider, but plays in a similar space.  Enables you to optionally define a prehook function and/or a posthook function which will get processed by a grpc server for every grpc call.  Use cases include features like authentication and logging.
+Not a full-fledged middleware provider, but plays in a similar space.  Enables you to optionally define a prehook function and/or a posthook function, which will get processed by a grpc server for every grpc call.  Also allows specification of a per-service or per-function middleware function.  Use cases can include features like authentication and logging.
 
-Future plans call for making this handle middleware functions more in line with the way [express](https://github.com/expressjs/express) does.  Meant to be a stopgap until Interceptors get implemented, but who knows what the future will bring!
+Meant to be a stopgap until Interceptors get implemented, but who knows what the future will bring!
 
 Designed as a drop-in replacement for [grpc](https://github.com/grpc/grpc-node).
 
@@ -39,7 +39,7 @@ const server = new grpc.Server(options, preHandler, postHandler);
 #### preHandler
 If provided, `preHandler` must be a function similar to the following:
 ```javascript
-function preHook(context, request) {
+function preHook(context, call) {
     console.log('I get called every time before the target function!');
 }
 ```
@@ -47,20 +47,39 @@ function preHook(context, request) {
 ```javascript
     context.userId = 1234;
 ```
-`request` is the object provided by the underlying grpc framework (commonly referred to as `call` in the official documentation).
+`call` is the object provided by the underlying grpc framework.
 
 #### postHandler
 If provided, `postHandler` must be a function similar to the following:
 ```javascript
-function postHook(err, context, request) {
+function postHook(err, context, call) {
     console.log('I get called every time after the target function!');
 }
 ```
-If the `preHandler` throws an error, or the target function calls its `callback` function passing in an error object, that error will be provided to th `postHandler` as `err`.  Otherwise, `err` will be `null`.
+If the `preHandler` or the middleware function throws an error, or the target function calls its `callback` function passing in an error object, that error will be provided to the `postHandler` as `err`.  Otherwise, `err` will be `null`.
 
-`context` will be the `context` object populated by the `preHandler`.  If there is no `preHandler`, it will be an empty Object.
+`context` will be the `context` object populated by the `preHandler` and/or middleware.  If there is no `preHandler` and/or middleware, it will be an empty Object.
 
-`request` is the object provided by the underlying grpc framework (commonly referred to as `call` in the official documentation), updated with any changes caused by the `preHandler` and/or target function.
+`call` is the object provided by the underlying grpc framework, updated with any changes caused by the `preHandler`, the middleware, and/or target function.
+
+### grpc.Server.addService
+`addService` can accept a third, optional parameter, `middleware`. `middleware` can either be a function or a mapping of function names to middleware implementation functions.  If `middleware` is a function, it must be similar to the following:
+```javascript
+function middleware(context, call) {
+    console.log('in middleware');
+}
+```
+In this case, `context` will be the object populated by the `preHandler`.  If there is no `preHandler`, it will be an empty Object.
+
+`call` is the object provided by the underlying grpc framework, updated with any changes caused by the `preHandler`.
+
+Alternatively, `middleware` can be a mapping of function names to implementation functions, just as with `implementation`. By specifying a key of the same name as passed to `implementation`, a per-function middleware can be specified.  For example:
+```javascript
+server.addService(hello_proto.Greeter.service, { sayHello: sayHello }, { sayHello : middleware });
+```
+The target functions must have the same signature as shown above.  In this case, the middleware function will only get called for the `sayHello` function, not any other functions that the `hello_proto.Greeter.service` may support.
+
+In all cases, the `preHandler`, if one exists, will get called before the middleware function.
 
 ## Example
 ```javascript

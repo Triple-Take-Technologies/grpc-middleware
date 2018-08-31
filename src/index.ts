@@ -4,7 +4,7 @@
  * MIT Licensed
  */
 
-import grpc from 'grpc';
+import grpc, { UntypedServiceImplementation } from 'grpc';
 
 export * from 'grpc';
 
@@ -17,6 +17,9 @@ interface PostHandler {
 
 interface MiddlewareHandler {
     (context: Object, call: grpc.UntypedServiceImplementation): void;
+}
+interface MiddlewareHandlerMap {
+    [name : string] : MiddlewareHandler
 }
 
 export class Server extends grpc.Server {
@@ -49,18 +52,32 @@ export class Server extends grpc.Server {
     /**
      * Add a service to the server, with a corresponding implementation.
      * @param service The service descriptor
-     * @param implementation Map of method names to method implementation
-     * for the provided service.
+     * @param implementation Map of method names to method implementation for the provided service.
+     * @param middleware Either a middleware function to be called for every method in the service, or a mapping of
+     * function names to a specific middleware function
      */
     addService<ImplementationType = grpc.UntypedServiceImplementation>(
         service: grpc.ServiceDefinition<ImplementationType>,
         implementation: ImplementationType,
-        middleware?: MiddlewareHandler
+        middleware?: MiddlewareHandler | MiddlewareHandlerMap
     ): void {
         let proxies: any = {};
         for (const key in implementation) {
             proxies[key] = (call: any, callback: any) => {
-                this.handler(call, callback, implementation[key], middleware);
+                if (middleware) {
+                    if (middleware && typeof middleware === 'function') {
+                        // middleware is a MiddlewareHandler
+                        this.handler(call, callback, implementation[key], middleware);
+                    }
+                    else {
+                        // middleware is a MiddlewareHandlerMap
+                        // Use implementation key to identify the correct function to call
+                        this.handler(call, callback, implementation[key], middleware[key]);
+                    }    
+                }
+                else {
+                    this.handler(call, callback, implementation[key]);
+                }
             }
         }
         super.addService(service, proxies);
